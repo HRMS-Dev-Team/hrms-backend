@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: hrms-salary-advance
+  datasource:
+    url: ${SALARY_ADVANCE_DB_URL:jdbc:postgresql://localhost:5432/hrms_salary_advance}
+    username: ${SALARY_ADVANCE_DB_USER:postgres}
+    password: ${SALARY_ADVANCE_DB_PASSWORD:root@2025}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    schemas: public
+
+server:
+  port: 8083
+
+logging:
+  level:
+    com.cre.hrms: DEBUG
+    org.springframework: INFO
