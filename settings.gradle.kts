@@ -1,6 +1,7 @@
 rootProject.name = "cre-hrms"
 
 // Apps
+include("apps:hrms-auth")
 include("apps:hrms-employee")
 include("apps:hrms-leave")
 include("apps:hrms-salary-advance")
