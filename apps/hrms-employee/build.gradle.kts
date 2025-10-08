@@ -12,6 +12,7 @@ dependencies {
     implementation(project(":libs:dto"))
     implementation(project(":libs:security"))
     implementation(project(":libs:config"))
+    implementation(project(":libs:messaging"))
 
     // Spring Boot
     implementation("org.springframework.boot:spring-boot-starter-web")

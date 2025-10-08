@@ -23,9 +23,5 @@ data class Dependent(
     var gender: Gender? = null,
 
     @Column(name = "phone_number")
-    var phoneNumber: String? = null,
-
-    @ElementCollection
-    @CollectionTable(name = "dependent_documents", joinColumns = [JoinColumn(name = "employee_id")])
-    var documents: MutableList<DependentDocument> = mutableListOf()
+    var phoneNumber: String? = null
 )

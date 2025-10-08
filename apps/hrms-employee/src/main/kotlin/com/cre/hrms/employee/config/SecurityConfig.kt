@@ -25,7 +25,8 @@ class SecurityConfig(
                 auth
                     .requestMatchers(
                         "/actuator/**",
-                        "/api/v1/employees/health"
+                        "/api/v1/employees/health",
+                        "/error"
                     ).permitAll()
                     .anyRequest().authenticated()
             }

@@ -21,7 +21,7 @@ class EmployeeController(
 ) {
 
     @PostMapping
-    @PreAuthorize("hasRole('HR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
     fun createEmployee(
         @Valid @RequestBody request: CreateEmployeeRequest
     ): ResponseEntity<EmployeeResponse> {

@@ -100,15 +100,7 @@ class EmployeeMapper {
             firstName = dto.firstName,
             lastName = dto.lastName,
             gender = dto.gender,
-            phoneNumber = dto.phoneNumber,
-            documents = dto.documents?.map { toDependentDocumentEntity(it) }?.toMutableList() ?: mutableListOf()
-        )
-    }
-
-    private fun toDependentDocumentEntity(dto: DependentDocumentDto): DependentDocument {
-        return DependentDocument(
-            documentType = dto.documentType,
-            documentNumber = dto.documentNumber
+            phoneNumber = dto.phoneNumber
         )
     }
 
@@ -165,14 +157,7 @@ class EmployeeMapper {
             lastName = dependent.lastName,
             gender = dependent.gender,
             phoneNumber = dependent.phoneNumber,
-            documents = dependent.documents.map { toDependentDocumentDto(it) }
-        )
-    }
-
-    private fun toDependentDocumentDto(document: DependentDocument): DependentDocumentDto {
-        return DependentDocumentDto(
-            documentType = document.documentType,
-            documentNumber = document.documentNumber
+            documents = null
         )
     }
 

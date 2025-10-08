@@ -16,8 +16,5 @@ interface EmployeeRepository : JpaRepository<Employee, UUID> {
 
     fun findByCompanyId(companyId: UUID): List<Employee>
 
-    fun findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
-        firstName: String,
-        lastName: String
-    ): List<Employee>
+    fun findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(firstName: String, lastName: String): List<Employee>
 }

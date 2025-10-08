@@ -12,6 +12,7 @@ dependencies {
     implementation(project(":libs:dto"))
     implementation(project(":libs:security"))
     implementation(project(":libs:config"))
+    implementation(project(":libs:messaging"))
 
     // Spring Boot
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -19,6 +20,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-security")
+
+    // Kafka
+    implementation("org.springframework.kafka:spring-kafka")
 
     // Testing
     testImplementation(project(":libs:test-utils"))

@@ -4,7 +4,11 @@ import com.cre.hrms.dto.employee.CreateEmployeeRequest
 import com.cre.hrms.dto.employee.EmployeeResponse
 import com.cre.hrms.dto.employee.UpdateEmployeeRequest
 import com.cre.hrms.employee.mapper.EmployeeMapper
+import com.cre.hrms.messaging.constants.Topics
+import com.cre.hrms.messaging.event.EmployeeCreatedEvent
+import com.cre.hrms.messaging.publisher.EventPublisher
 import com.cre.hrms.persistence.employee.repository.EmployeeRepository
+import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -14,8 +18,10 @@ import java.util.UUID
 @Service
 class EmployeeService(
     private val employeeRepository: EmployeeRepository,
-    private val employeeMapper: EmployeeMapper
+    private val employeeMapper: EmployeeMapper,
+    private val eventPublisher: EventPublisher
 ) {
+    private val logger = LoggerFactory.getLogger(EmployeeService::class.java)
 
     @Transactional
     fun createEmployee(request: CreateEmployeeRequest): EmployeeResponse {
@@ -33,6 +39,20 @@ class EmployeeService(
 
         val employee = employeeMapper.toEntity(request)
         val savedEmployee = employeeRepository.save(employee)
+
+        // Publish employee created event
+        val event = EmployeeCreatedEvent(
+            employeeId = savedEmployee.id!!,
+            employeeNumber = savedEmployee.employeeNumber,
+            firstName = savedEmployee.firstName,
+            lastName = savedEmployee.lastName,
+            email = savedEmployee.email,
+            companyId = savedEmployee.companyId
+        )
+
+        logger.info("Publishing employee created event for employee: ${savedEmployee.id}")
+        eventPublisher.publish(Topics.EMPLOYEE_CREATED, savedEmployee.id.toString(), event)
+
         return employeeMapper.toResponse(savedEmployee)
     }
 
