@@ -1,9 +1,13 @@
 plugins {
     id("org.springframework.boot")
+    kotlin("jvm")
+    kotlin("plugin.spring")
+    kotlin("plugin.jpa")
 }
 
 dependencies {
     // Lib dependencies
+    implementation(project(":libs:core"))
     implementation(project(":libs:persistence"))
     implementation(project(":libs:dto"))
     implementation(project(":libs:security"))
