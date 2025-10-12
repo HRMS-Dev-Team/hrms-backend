@@ -12,8 +12,14 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories
     "com.cre.hrms.security",
     "com.cre.hrms.messaging"
 ])
-@EnableJpaRepositories(basePackages = ["com.cre.hrms.persistence.employee"])
-@EntityScan(basePackages = ["com.cre.hrms.persistence.employee"])
+@EnableJpaRepositories(basePackages = [
+    "com.cre.hrms.persistence.employee",
+    "com.cre.hrms.persistence.department"
+])
+@EntityScan(basePackages = [
+    "com.cre.hrms.persistence.employee",
+    "com.cre.hrms.persistence.department"
+])
 class EmployeeApplication
 
 fun main(args: Array<String>) {

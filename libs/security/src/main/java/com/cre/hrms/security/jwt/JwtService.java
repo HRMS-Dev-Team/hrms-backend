@@ -41,11 +41,22 @@ public class JwtService {
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+        // Add employeeId to claims if user is an instance of our User entity
+        if (userDetails instanceof com.cre.hrms.persistence.user.entity.User) {
+            com.cre.hrms.persistence.user.entity.User user = (com.cre.hrms.persistence.user.entity.User) userDetails;
+            if (user.getEmployeeId() != null) {
+                extraClaims.put("employeeId", user.getEmployeeId().toString());
+            }
+        }
         return buildToken(extraClaims, userDetails, jwtExpiration);
     }
 
     public String generateRefreshToken(UserDetails userDetails) {
         return buildToken(new HashMap<>(), userDetails, refreshExpiration);
+    }
+
+    public String extractEmployeeId(String token) {
+        return extractClaim(token, claims -> claims.get("employeeId", String.class));
     }
 
     private String buildToken(

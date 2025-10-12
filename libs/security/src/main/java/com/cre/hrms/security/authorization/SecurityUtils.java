@@ -1,5 +1,6 @@
 package com.cre.hrms.security.authorization;
 
+import com.cre.hrms.persistence.user.entity.User;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -7,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class SecurityUtils {
@@ -61,5 +63,37 @@ public class SecurityUtils {
         return authentication != null &&
                authentication.isAuthenticated() &&
                authentication.getPrincipal() instanceof UserDetails;
+    }
+
+    public static Optional<UUID> getCurrentEmployeeId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof User) {
+            User user = (User) authentication.getPrincipal();
+            return Optional.ofNullable(user.getEmployeeId());
+        }
+        return Optional.empty();
+    }
+
+    public static UUID getCurrentEmployeeIdOrThrow() {
+        return getCurrentEmployeeId()
+                .orElseThrow(() -> new RuntimeException("No employee ID found for current user"));
+    }
+
+    public static Optional<String> getCurrentEmployeeName() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof User) {
+            User user = (User) authentication.getPrincipal();
+            String firstName = user.getFirstName();
+            String lastName = user.getLastName();
+
+            if (firstName != null && lastName != null) {
+                return Optional.of(firstName + " " + lastName);
+            } else if (firstName != null) {
+                return Optional.of(firstName);
+            } else if (lastName != null) {
+                return Optional.of(lastName);
+            }
+        }
+        return Optional.empty();
     }
 }

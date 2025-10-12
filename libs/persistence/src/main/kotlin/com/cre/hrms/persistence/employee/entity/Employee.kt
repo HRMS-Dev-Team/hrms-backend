@@ -4,6 +4,7 @@ import com.cre.hrms.persistence.employee.entity.embedded.BankDetails
 import com.cre.hrms.persistence.employee.entity.embedded.ContactPerson
 import com.cre.hrms.persistence.employee.entity.embedded.ContractDetails
 import com.cre.hrms.persistence.employee.entity.embedded.Dependent
+import com.cre.hrms.persistence.department.entity.Department
 import com.cre.hrms.core.enums.Gender
 import com.cre.hrms.core.enums.MaritalStatus
 import jakarta.persistence.*
@@ -83,6 +84,10 @@ data class Employee(
     @ElementCollection
     @CollectionTable(name = "employee_contact_persons", joinColumns = [JoinColumn(name = "employee_id")])
     var contactPersons: MutableList<ContactPerson> = mutableListOf(),
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id")
+    var department: Department? = null,
 
     @Embedded
     var contractDetails: ContractDetails? = null,

@@ -32,6 +32,7 @@ data class CreateEmployeeRequest(
     val companyId: UUID,
 
     val companyName: String? = null,
+    val departmentId: UUID? = null,
     val nationality: String? = null,
     val dateOfBirth: String? = null,
     val gender: Gender? = null,

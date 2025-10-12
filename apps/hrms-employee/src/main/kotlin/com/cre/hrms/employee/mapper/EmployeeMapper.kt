@@ -3,10 +3,13 @@ package com.cre.hrms.employee.mapper
 import com.cre.hrms.dto.employee.*
 import com.cre.hrms.persistence.employee.entity.Employee
 import com.cre.hrms.persistence.employee.entity.embedded.*
+import com.cre.hrms.persistence.department.repository.DepartmentRepository
 import org.springframework.stereotype.Component
 
 @Component
-class EmployeeMapper {
+class EmployeeMapper(
+    private val departmentRepository: DepartmentRepository
+) {
 
     fun toEntity(request: CreateEmployeeRequest): Employee {
         return Employee(
@@ -22,6 +25,7 @@ class EmployeeMapper {
             rssbNumber = request.rssbNumber,
             companyId = request.companyId,
             companyName = request.companyName,
+            department = request.departmentId?.let { departmentRepository.findById(it).orElse(null) },
             nationality = request.nationality,
             dateOfBirth = request.dateOfBirth,
             gender = request.gender,
@@ -49,6 +53,7 @@ class EmployeeMapper {
         request.rssbNumber?.let { employee.rssbNumber = it }
         request.companyId?.let { employee.companyId = it }
         request.companyName?.let { employee.companyName = it }
+        request.departmentId?.let { employee.department = departmentRepository.findById(it).orElse(null) }
         request.nationality?.let { employee.nationality = it }
         request.dateOfBirth?.let { employee.dateOfBirth = it }
         request.gender?.let { employee.gender = it }
@@ -77,6 +82,8 @@ class EmployeeMapper {
             rssbNumber = employee.rssbNumber,
             companyId = employee.companyId,
             companyName = employee.companyName,
+            departmentId = employee.department?.id,
+            departmentName = employee.department?.name,
             nationality = employee.nationality,
             dateOfBirth = employee.dateOfBirth,
             gender = employee.gender,

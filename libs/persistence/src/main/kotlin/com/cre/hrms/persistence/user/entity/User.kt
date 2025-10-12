@@ -29,6 +29,9 @@ data class User(
     @Column(name = "last_name")
     var lastName: String? = null,
 
+    @Column(name = "employee_id")
+    var employeeId: java.util.UUID? = null,
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = [JoinColumn(name = "user_id")])
     @Column(name = "role")

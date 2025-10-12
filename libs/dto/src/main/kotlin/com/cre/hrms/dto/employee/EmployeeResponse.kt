@@ -19,6 +19,8 @@ data class EmployeeResponse(
     val rssbNumber: String? = null,
     val companyId: UUID,
     val companyName: String? = null,
+    val departmentId: UUID? = null,
+    val departmentName: String? = null,
     val nationality: String? = null,
     val dateOfBirth: String? = null,
     val gender: Gender? = null,
