@@ -3,6 +3,7 @@ package com.cre.hrms.leave.controller
 import com.cre.hrms.dto.leave.AllocateLeaveBalanceRequest
 import com.cre.hrms.dto.leave.LeaveBalanceResponse
 import com.cre.hrms.leave.service.LeaveBalanceService
+import com.cre.hrms.security.authorization.SecurityUtils
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -62,8 +63,7 @@ class LeaveBalanceController(
     @GetMapping("/my-balances")
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'MANAGER', 'HR', 'ADMIN')")
     fun getMyLeaveBalances(): ResponseEntity<List<LeaveBalanceResponse>> {
-        // In production, get actual employee ID from auth service
-        val employeeId = UUID.randomUUID() // Placeholder
+        val employeeId = SecurityUtils.getCurrentEmployeeIdOrThrow()
         val response = leaveBalanceService.getEmployeeLeaveBalances(employeeId)
         return ResponseEntity.ok(response)
     }
