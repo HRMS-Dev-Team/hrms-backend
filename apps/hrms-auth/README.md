@@ -1,45 +1,145 @@
-# HRMS Authentication Service
+# Authentication & Authorization Service
 
-This service provides authentication and authorization functionality for the HRMS system using JWT tokens.
+A secure JWT-based authentication and authorization service for the HRMS system with role-based access control and Kafka event integration.
 
-## Features
+## 📚 Documentation
 
-- User registration with validation
-- User login with JWT token generation
-- JWT token refresh
-- Password encryption using BCrypt
-- Role-based access control (RBAC)
-- Spring Security integration
-- PostgreSQL database with Flyway migrations
+- **[Complete API Documentation](AUTH_API_DOCUMENTATION.md)** - Full API reference with examples
+- **[API Testing Checklist](API_TESTING_CHECKLIST.md)** - Comprehensive testing guide
+- **[Quick Reference](API_QUICK_REFERENCE.md)** - Quick lookup for common operations
 
-## Roles
+## 🚀 Features
 
-The system supports the following roles:
-- `ADMIN` - Full system access
-- `HR` - Human Resources access
-- `MANAGER` - Manager-level access
-- `EMPLOYEE` - Basic employee access (default)
+### Core Functionality
+- ✅ **User Registration** - Create new user accounts with role assignment
+- ✅ **User Authentication** - JWT-based login with access and refresh tokens
+- ✅ **Token Refresh** - Seamless token renewal without re-authentication
+- ✅ **Role-Based Access Control** - 4-tier role hierarchy (ADMIN, HR, MANAGER, EMPLOYEE)
+- ✅ **Password Security** - BCrypt hashing with validation rules
 
-## API Endpoints
+### Advanced Features
+- ✅ **JWT Token Management** - Separate access (24h) and refresh (7d) tokens
+- ✅ **Employee Context** - employeeId embedded in JWT claims
+- ✅ **Kafka Integration** - Event-driven employee creation
+- ✅ **Spring Security** - Method-level security with @PreAuthorize
+- ✅ **Custom Claims** - Extensible JWT payload with user context
+- ✅ **Health Checks** - Service availability monitoring
 
-### Public Endpoints (No Authentication Required)
+## 🏗️ Architecture
 
-#### Register a new user
+### Tech Stack
+- **Language:** Kotlin 1.9.21
+- **Framework:** Spring Boot 3.2.0
+- **Security:** Spring Security 6.x with JWT
+- **Database:** PostgreSQL with Flyway migrations
+- **Messaging:** Apache Kafka for event streaming
+- **Token Format:** JSON Web Tokens (JWT) with HS256 signing
+
+### Project Structure
 ```
-POST /api/v1/auth/register
-Content-Type: application/json
-
-{
-  "username": "john.doe",
-  "email": "john.doe@example.com",
-  "password": "securePassword123",
-  "firstName": "John",
-  "lastName": "Doe",
-  "roles": ["EMPLOYEE"]
-}
+apps/hrms-auth/
+├── src/main/kotlin/com/cre/hrms/auth/
+│   ├── controller/          # REST endpoints
+│   │   ├── AuthenticationController.kt
+│   │   └── UserController.kt
+│   ├── service/             # Business logic
+│   │   ├── AuthenticationService.kt
+│   │   ├── JwtService.kt
+│   │   └── UserService.kt
+│   ├── entity/              # Database entities
+│   │   └── User.kt
+│   ├── repository/          # Data access
+│   │   └── UserRepository.kt
+│   ├── config/              # Configuration
+│   │   └── SecurityConfig.kt
+│   └── kafka/               # Event producers
+│       └── EmployeeEventProducer.kt
+└── src/main/resources/
+    └── db/migration/        # Database migrations
 ```
 
-Response:
+## 🔧 Setup & Configuration
+
+### Prerequisites
+- Java 17+
+- PostgreSQL database
+- Kafka (for event streaming)
+
+### Database Setup
+```sql
+-- Create database
+CREATE DATABASE hrms_auth;
+
+-- Migrations run automatically with Flyway
+-- Located in: src/main/resources/db/migration/
+```
+
+### Running the Service
+```bash
+# From project root
+./gradlew :apps:hrms-auth:bootRun
+
+# Service will start on port 8081
+```
+
+### Environment Variables
+```properties
+# Application
+server.port=8081
+
+# Database
+spring.datasource.url=jdbc:postgresql://localhost:5432/hrms_auth
+spring.datasource.username=${DB_USERNAME:postgres}
+spring.datasource.password=${DB_PASSWORD:postgres}
+
+# JWT Configuration
+jwt.secret=${JWT_SECRET:your-secret-key-at-least-256-bits}
+jwt.expiration=86400000          # 24 hours in milliseconds
+jwt.refresh-token.expiration=604800000  # 7 days in milliseconds
+
+# Kafka
+spring.kafka.bootstrap-servers=localhost:9092
+```
+
+## 📊 API Overview
+
+### Base URL
+```
+http://localhost:8081
+```
+
+### Endpoint Categories
+
+**Authentication** - `/api/v1/auth`
+- Register new users
+- Login and get tokens
+- Refresh access tokens
+- 4 endpoints total
+
+**User Management** - `/api/v1/users`
+- Get current user info
+- Role-based test endpoints
+- 4 endpoints total
+
+### Total: 8 API Endpoints
+
+## 🎯 Quick Start Examples
+
+### 1. Register New User
+```bash
+curl -X POST http://localhost:8081/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "john.doe",
+    "email": "john.doe@company.com",
+    "password": "SecurePassword123!",
+    "firstName": "John",
+    "lastName": "Doe",
+    "roles": ["EMPLOYEE"]
+  }'
+```
+
+**Response:**
 ```json
 {
   "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -47,227 +147,343 @@ Response:
   "tokenType": "Bearer",
   "expiresIn": 86400000,
   "username": "john.doe",
-  "email": "john.doe@example.com"
+  "email": "john.doe@company.com"
 }
 ```
 
-#### Login
-```
-POST /api/v1/auth/login
-Content-Type: application/json
-
-{
-  "username": "john.doe",
-  "password": "securePassword123"
-}
-```
-
-Response: Same as registration
-
-#### Refresh Token
-```
-POST /api/v1/auth/refresh
-Authorization: Bearer <refresh_token>
+### 2. Login
+```bash
+curl -X POST http://localhost:8081/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "john.doe",
+    "password": "SecurePassword123!"
+  }'
 ```
 
-Response: New access and refresh tokens
-
-#### Health Check
-```
-GET /api/v1/auth/health
-```
-
-### Protected Endpoints (Authentication Required)
-
-#### Get Current User
-```
-GET /api/v1/users/me
-Authorization: Bearer <access_token>
+### 3. Get Current User
+```bash
+curl -X GET http://localhost:8081/api/v1/users/me \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
-Response:
+### 4. Refresh Token
+```bash
+curl -X POST http://localhost:8081/api/v1/auth/refresh \
+  -H "Authorization: Bearer YOUR_REFRESH_TOKEN"
+```
+
+## 🔐 Security & Authorization
+
+### Role Hierarchy
+```
+ADMIN > HR > MANAGER > EMPLOYEE
+```
+
+| Role | Permissions |
+|------|-------------|
+| **ADMIN** | Full system access, user management, system configuration |
+| **HR** | Employee management, leave/salary administration, department management |
+| **MANAGER** | Team management, approval workflows, team reports |
+| **EMPLOYEE** | Personal data access, leave requests, profile management |
+
+### JWT Token Structure
+
+**Access Token Claims:**
 ```json
 {
-  "username": "john.doe",
-  "roles": ["ROLE_EMPLOYEE"]
+  "sub": "john.doe",
+  "employeeId": "770e8400-e29b-41d4-a716-446655440000",
+  "roles": ["ROLE_EMPLOYEE"],
+  "iat": 1634567890,
+  "exp": 1634654290
 }
 ```
 
-#### Admin Only Endpoint
-```
-GET /api/v1/users/admin
-Authorization: Bearer <access_token>
-```
-Requires: `ADMIN` role
+**Token Lifecycle:**
+- Access Token: 24 hours (used for API authentication)
+- Refresh Token: 7 days (used to obtain new access tokens)
 
-#### HR Endpoint
-```
-GET /api/v1/users/hr
-Authorization: Bearer <access_token>
-```
-Requires: `HR` or `ADMIN` role
+### Password Requirements
+- ✅ Minimum 8 characters
+- ✅ Hashed with BCrypt
+- ✅ Not stored in plain text
+- ✅ Validated on registration
 
-#### Manager Endpoint
+## 📈 Authentication Flow
+
 ```
-GET /api/v1/users/manager
-Authorization: Bearer <access_token>
+┌─────────────┐
+│   Register  │
+│     or      │──────┐
+│    Login    │      │
+└─────────────┘      │
+                     ↓
+            ┌─────────────────┐
+            │  Receive Tokens │
+            │  - Access Token │
+            │  - Refresh Token│
+            └─────────────────┘
+                     ↓
+            ┌─────────────────┐
+            │   Use Access    │
+            │  Token for API  │
+            │    Requests     │
+            └─────────────────┘
+                     ↓
+            ┌─────────────────┐
+            │ Token Expires?  │──No──┐
+            │   (24 hours)    │      │
+            └─────────────────┘      │
+                     │                │
+                    Yes               │
+                     ↓                │
+            ┌─────────────────┐      │
+            │ Use Refresh     │      │
+            │ Token to Get    │      │
+            │ New Access Token│      │
+            └─────────────────┘      │
+                     │                │
+                     └────────────────┘
+
+            ┌─────────────────┐
+            │Refresh Expires? │
+            │   (7 days)      │
+            └─────────────────┘
+                     │
+                    Yes
+                     ↓
+            ┌─────────────────┐
+            │  Login Again    │
+            └─────────────────┘
 ```
-Requires: `MANAGER` or `ADMIN` role
 
-## Using JWT Tokens in Other Services
+## 🔄 Kafka Integration
 
-To secure other microservices, add the following dependencies:
+### Employee Creation Event
 
+When a user registers, the auth service publishes an event to Kafka:
+
+**Topic:** `employee-events`
+
+**Event Payload:**
+```json
+{
+  "eventType": "EMPLOYEE_CREATED",
+  "employeeId": "uuid-here",
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@company.com",
+  "username": "john.doe"
+}
+```
+
+**Consumer:** Employee Service
+- Listens for events
+- Creates employee record
+- Links to user account via employeeId
+
+## 📝 Data Models
+
+### Key Entities
+
+**User**
+```kotlin
+data class User(
+    val id: UUID,
+    val username: String,
+    val email: String,
+    val password: String,  // BCrypt hashed
+    val firstName: String,
+    val lastName: String,
+    val employeeId: UUID?,
+    val roles: Set<Role>,
+    val enabled: Boolean,
+    val accountNonLocked: Boolean
+)
+```
+
+**Role Enum**
+```kotlin
+enum class Role {
+    ADMIN,
+    HR,
+    MANAGER,
+    EMPLOYEE
+}
+```
+
+## 🧪 Testing
+
+### Health Check
+```bash
+# Check service health
+curl http://localhost:8081/api/v1/auth/health
+```
+
+**Response:** `"Auth service is running"`
+
+### Testing Tools
+- See [API_TESTING_CHECKLIST.md](API_TESTING_CHECKLIST.md) for comprehensive test scenarios
+- Includes 15 test categories with 100+ test cases
+- Covers registration, login, token refresh, authorization, validation, and security
+
+## 🔄 Integration with Other Services
+
+### Employee Service
+```
+Auth Service                    Employee Service
+     │                                 │
+     │ 1. User registers               │
+     │──────────────────────────────> │
+     │                                 │
+     │ 2. Kafka event: EMPLOYEE_CREATED
+     │─────────────────────────────> │
+     │                                 │
+     │                           3. Create employee
+     │                           4. Return employeeId
+     │ <──────────────────────────────│
+     │                                 │
+     │ 5. Update user.employeeId       │
+     │                                 │
+```
+
+### Leave Service
+- **Authentication:** Validates JWT tokens from Auth service
+- **Authorization:** Uses roles from JWT for access control
+- **Context:** Extracts employeeId from token claims
+
+### Salary Advance Service
+- Similar JWT validation pattern
+- Role-based access control
+- Employee context extraction
+
+## 🔧 Using JWT Tokens in Other Services
+
+### Add Security Dependency
 ```kotlin
 implementation(project(":libs:security"))
 ```
 
-Then configure security:
-
-```java
+### Configure Security
+```kotlin
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-public class SecurityConfig {
-
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthFilter;
-
+class SecurityConfig(
+    private val jwtAuthFilter: JwtAuthenticationFilter
+) {
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
-            .csrf(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/public/**").permitAll()
-                .anyRequest().authenticated()
-            )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            .csrf { it.disable() }
+            .authorizeHttpRequests { auth ->
+                auth
+                    .requestMatchers("/public/**").permitAll()
+                    .anyRequest().authenticated()
+            }
+            .sessionManagement { session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            }
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
 
-        return http.build();
+        return http.build()
     }
 }
 ```
 
-### Using Authorization Annotations
-
-```java
+### Use Authorization Annotations
+```kotlin
 @RestController
 @RequestMapping("/api/v1/employees")
-public class EmployeeController {
+class EmployeeController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
-    public List<Employee> getAllEmployees() {
+    fun getAllEmployees(): List<Employee> {
         // Only HR and ADMIN can access
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public Employee createEmployee(@RequestBody Employee employee) {
+    fun createEmployee(@RequestBody employee: Employee): Employee {
         // Only ADMIN can create
     }
 
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
-    public Employee getCurrentEmployee() {
-        String username = SecurityUtils.getCurrentUsername().orElseThrow();
+    fun getCurrentEmployee(): Employee {
+        val employeeId = SecurityUtils.getCurrentEmployeeIdOrThrow()
         // Any authenticated user can access
     }
 }
 ```
 
-## Configuration
+## 🐛 Common Issues & Solutions
 
-### Environment Variables
+### "Username already exists"
+**Solution:** Use a different username or check if user is already registered
 
-- `DB_USERNAME` - Database username (default: postgres)
-- `DB_PASSWORD` - Database password (default: postgres)
-- `JWT_SECRET` - Secret key for JWT signing (use a strong secret in production)
+### "Authentication failed: Bad credentials"
+**Solution:**
+- Verify username and password are correct
+- Check caps lock is off
+- Ensure account is not locked or disabled
 
-### Application Properties
+### "Token refresh failed: Invalid refresh token"
+**Solution:**
+- Login again to get new tokens
+- Check token hasn't expired (7 days)
+- Verify you're using refresh token, not access token
 
-Edit `src/main/resources/application.yml`:
+### "Access Denied" (403 Forbidden)
+**Solution:**
+- Check user has required role
+- Verify token is valid and not expired
+- Ensure correct endpoint is being accessed
 
-```yaml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/hrms_auth
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
+## 📖 Additional Resources
 
-jwt:
-  secret: ${JWT_SECRET:your-secret-key}
-  expiration: 86400000 # 24 hours
-  refresh-token:
-    expiration: 604800000 # 7 days
+- **Full API Docs**: [AUTH_API_DOCUMENTATION.md](AUTH_API_DOCUMENTATION.md)
+- **Testing Guide**: [API_TESTING_CHECKLIST.md](API_TESTING_CHECKLIST.md)
+- **Quick Reference**: [API_QUICK_REFERENCE.md](API_QUICK_REFERENCE.md)
 
-server:
-  port: 8081
-```
+## 🤝 Contributing
 
-## Database Setup
+1. Follow existing code patterns
+2. Add tests for new features
+3. Update documentation
+4. Follow Kotlin coding conventions
 
-1. Create PostgreSQL database:
-```sql
-CREATE DATABASE hrms_auth;
-```
+## 🔒 Security Best Practices
 
-2. Run the application - Flyway will automatically create the tables
+### Token Security
+✅ Never expose tokens in URLs
+✅ Don't log tokens
+✅ Store refresh tokens securely (HttpOnly cookies)
+✅ Implement token rotation
+✅ Use HTTPS in production
 
-## Running the Service
+### API Security
+✅ Rate limiting on auth endpoints
+✅ Account lockout after failed attempts
+✅ CORS configuration
+✅ Input validation and sanitization
+✅ SQL injection prevention via JPA
 
-```bash
-./gradlew :apps:hrms-auth:bootRun
-```
+### Password Security
+✅ BCrypt hashing with salt
+✅ Minimum length enforcement
+✅ Never store plain text passwords
+✅ Secure password reset flow (if implemented)
 
-The service will start on port 8081.
+## 📄 License
 
-## Testing
+Part of the HRMS Backend System
 
-Example using cURL:
+---
 
-```bash
-# Register
-curl -X POST http://localhost:8081/api/v1/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "admin",
-    "email": "admin@example.com",
-    "password": "admin123",
-    "firstName": "Admin",
-    "lastName": "User",
-    "roles": ["ADMIN"]
-  }'
-
-# Login
-curl -X POST http://localhost:8081/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "admin",
-    "password": "admin123"
-  }'
-
-# Use token to access protected endpoint
-curl -X GET http://localhost:8081/api/v1/users/me \
-  -H "Authorization: Bearer <your_access_token>"
-```
-
-## Security Features
-
-1. **Password Encryption**: BCrypt with strength 10
-2. **JWT Signing**: HS256 algorithm
-3. **Token Expiration**: 24 hours for access tokens, 7 days for refresh tokens
-4. **Stateless Sessions**: No server-side session storage
-5. **Role-Based Access Control**: Fine-grained permissions using Spring Security annotations
-6. **Account Status**: Support for account locking, expiration, and credential expiration
-
-## Next Steps
-
-- Implement email verification
-- Add password reset functionality
-- Implement account lockout after failed login attempts
-- Add OAuth2 integration
-- Implement audit logging
+**Version:** 1.0
+**Last Updated:** October 12, 2025
+**Service Port:** 8081
+**Status:** Production Ready ✅
