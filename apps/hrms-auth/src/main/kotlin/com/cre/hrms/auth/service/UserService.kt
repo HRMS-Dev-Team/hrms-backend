@@ -19,37 +19,34 @@ class UserService(
 
     @Transactional
     fun createUserForEmployee(event: EmployeeCreatedEvent) {
-        logger.info("Creating user for employee: ${event.employeeId}")
+        logger.info("Processing employee created event for employee: ${event.employeeId}")
 
-        // Check if email exists
         val email = event.email ?: throw IllegalArgumentException("Employee email is required")
+        val existingUser = userRepository.findByEmail(email)
 
-        // Check if user already exists
-        if (userRepository.existsByEmail(email)) {
-            logger.warn("User already exists for email: $email")
+        if (existingUser != null) {
+            logger.info("User already exists for email: $email, updating employee ID")
+            existingUser.employeeId = event.employeeId
+            userRepository.save(existingUser)
+            logger.info("Updated existing user ${existingUser.username} with employee ID: ${event.employeeId}")
             return
         }
 
-        // Generate username from employee number
         val username = event.employeeNumber
-
-        // Generate default password (employee number + first 4 chars of last name)
         val defaultPassword = generateDefaultPassword(event.employeeNumber, event.lastName)
 
-        // Create user entity
         val user = User(
             username = username,
             email = email,
             password = passwordEncoder.encode(defaultPassword),
             firstName = event.firstName,
             lastName = event.lastName,
-            roles = mutableSetOf(Role.EMPLOYEE)
+            roles = mutableSetOf(Role.EMPLOYEE),
+            employeeId = event.employeeId
         )
 
         userRepository.save(user)
-
         logger.info("User created successfully for employee: ${event.employeeId}, username: $username, default password: $defaultPassword")
-        // In production, you should send the password to the employee via email or other secure channel
     }
 
     private fun generateDefaultPassword(employeeNumber: String, lastName: String): String {

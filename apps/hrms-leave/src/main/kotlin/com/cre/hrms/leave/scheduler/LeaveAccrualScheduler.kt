@@ -33,9 +33,7 @@ class LeaveAccrualScheduler(
             val leaveTypes = leaveTypeRepository.findByIsActive(true)
                 .filter { it.accrualFrequency == "MONTHLY" }
 
-            // TODO: Get actual list of active employees from employee service
             val activeEmployeeIds = getActiveEmployeeIds()
-
             var totalAccrued = 0
 
             for (leaveType in leaveTypes) {
@@ -43,7 +41,6 @@ class LeaveAccrualScheduler(
 
                 for (employeeId in activeEmployeeIds) {
                     try {
-                        // Check if balance exists for this employee and leave type
                         val existingBalance = leaveBalanceRepository.findByEmployeeIdAndLeaveTypeAndYear(
                             employeeId,
                             leaveType,
@@ -51,7 +48,6 @@ class LeaveAccrualScheduler(
                         )
 
                         if (existingBalance != null) {
-                            // Add to existing balance
                             leaveBalanceService.adjustLeaveBalance(
                                 employeeId,
                                 leaveType.id!!,
@@ -59,7 +55,6 @@ class LeaveAccrualScheduler(
                                 monthlyAccrual
                             )
                         } else {
-                            // Create new balance with monthly accrual
                             leaveBalanceService.allocateLeaveBalance(
                                 employeeId,
                                 leaveType.id!!,
@@ -96,15 +91,12 @@ class LeaveAccrualScheduler(
             val leaveTypes = leaveTypeRepository.findByIsActive(true)
                 .filter { it.accrualFrequency == "YEARLY" }
 
-            // TODO: Get actual list of active employees from employee service
             val activeEmployeeIds = getActiveEmployeeIds()
-
             var totalAccrued = 0
 
             for (leaveType in leaveTypes) {
                 for (employeeId in activeEmployeeIds) {
                     try {
-                        // Handle carry-forward from previous year
                         val previousYearBalance = leaveBalanceRepository.findByEmployeeIdAndLeaveTypeAndYear(
                             employeeId,
                             leaveType,
@@ -126,7 +118,6 @@ class LeaveAccrualScheduler(
                             logger.info("Carrying forward $carryForward days for employee $employeeId, leave type ${leaveType.name}")
                         }
 
-                        // Allocate new balance for current year
                         val totalAllocation = leaveType.defaultDaysPerYear.add(carryForward)
 
                         leaveBalanceService.allocateLeaveBalance(
@@ -171,11 +162,9 @@ class LeaveAccrualScheduler(
 
                 for (balance in balances) {
                     if (balance.carriedForward > BigDecimal.ZERO) {
-                        // Expire the carried forward balance
                         balance.carriedForward = BigDecimal.ZERO
                         leaveBalanceRepository.save(balance)
                         totalExpired++
-
                         logger.info("Expired carry-forward balance for employee ${balance.employeeId}, leave type ${leaveType.name}")
                     }
                 }
@@ -198,9 +187,8 @@ class LeaveAccrualScheduler(
 
         try {
             val currentYear = LocalDate.now().year
-            val oldYear = currentYear - 3 // Keep balances for last 3 years
+            val oldYear = currentYear - 3
 
-            // Delete very old balances
             val oldBalances = leaveBalanceRepository.findAll()
                 .filter { it.year < oldYear }
 
@@ -215,13 +203,7 @@ class LeaveAccrualScheduler(
         }
     }
 
-    /**
-     * Get list of active employee IDs
-     * TODO: Replace with actual call to employee service
-     */
     private fun getActiveEmployeeIds(): List<UUID> {
-        // For now, get unique employee IDs from existing leave balances
-        // In production, this should fetch from employee service
         return leaveBalanceRepository.findAll()
             .map { it.employeeId }
             .distinct()

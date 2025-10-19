@@ -116,9 +116,6 @@ class EmployeeController(
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
     fun getMyProfile(): ResponseEntity<EmployeeResponse> {
-        // TODO: Implement getting employee by current username
-        // val username = SecurityUtils.getCurrentUsername().orElseThrow()
-        // val response = employeeService.getEmployeeByUsername(username)
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build()
     }
 

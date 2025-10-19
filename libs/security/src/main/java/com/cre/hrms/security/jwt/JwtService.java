@@ -41,7 +41,12 @@ public class JwtService {
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
-        // Add employeeId to claims if user is an instance of our User entity
+        if (userDetails.getAuthorities() != null && !userDetails.getAuthorities().isEmpty()) {
+            extraClaims.put("roles", userDetails.getAuthorities().stream()
+                    .map(authority -> authority.getAuthority())
+                    .toList());
+        }
+
         if (userDetails instanceof com.cre.hrms.persistence.user.entity.User) {
             com.cre.hrms.persistence.user.entity.User user = (com.cre.hrms.persistence.user.entity.User) userDetails;
             if (user.getEmployeeId() != null) {
@@ -57,6 +62,17 @@ public class JwtService {
 
     public String extractEmployeeId(String token) {
         return extractClaim(token, claims -> claims.get("employeeId", String.class));
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.List<String> extractRoles(String token) {
+        return extractClaim(token, claims -> {
+            Object roles = claims.get("roles");
+            if (roles instanceof java.util.List) {
+                return (java.util.List<String>) roles;
+            }
+            return java.util.Collections.emptyList();
+        });
     }
 
     private String buildToken(

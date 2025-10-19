@@ -1,6 +1,7 @@
 package com.cre.hrms.security.authorization;
 
 import com.cre.hrms.persistence.user.entity.User;
+import com.cre.hrms.security.jwt.JwtUserDetails;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -67,9 +68,14 @@ public class SecurityUtils {
 
     public static Optional<UUID> getCurrentEmployeeId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof User) {
-            User user = (User) authentication.getPrincipal();
-            return Optional.ofNullable(user.getEmployeeId());
+        if (authentication != null) {
+            if (authentication.getPrincipal() instanceof User) {
+                User user = (User) authentication.getPrincipal();
+                return Optional.ofNullable(user.getEmployeeId());
+            } else if (authentication.getPrincipal() instanceof JwtUserDetails) {
+                JwtUserDetails jwtUser = (JwtUserDetails) authentication.getPrincipal();
+                return Optional.ofNullable(jwtUser.getEmployeeId());
+            }
         }
         return Optional.empty();
     }
@@ -81,17 +87,31 @@ public class SecurityUtils {
 
     public static Optional<String> getCurrentEmployeeName() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof User) {
-            User user = (User) authentication.getPrincipal();
-            String firstName = user.getFirstName();
-            String lastName = user.getLastName();
+        if (authentication != null) {
+            if (authentication.getPrincipal() instanceof User) {
+                User user = (User) authentication.getPrincipal();
+                String firstName = user.getFirstName();
+                String lastName = user.getLastName();
 
-            if (firstName != null && lastName != null) {
-                return Optional.of(firstName + " " + lastName);
-            } else if (firstName != null) {
-                return Optional.of(firstName);
-            } else if (lastName != null) {
-                return Optional.of(lastName);
+                if (firstName != null && lastName != null) {
+                    return Optional.of(firstName + " " + lastName);
+                } else if (firstName != null) {
+                    return Optional.of(firstName);
+                } else if (lastName != null) {
+                    return Optional.of(lastName);
+                }
+            } else if (authentication.getPrincipal() instanceof JwtUserDetails) {
+                JwtUserDetails jwtUser = (JwtUserDetails) authentication.getPrincipal();
+                String firstName = jwtUser.getFirstName();
+                String lastName = jwtUser.getLastName();
+
+                if (firstName != null && lastName != null) {
+                    return Optional.of(firstName + " " + lastName);
+                } else if (firstName != null) {
+                    return Optional.of(firstName);
+                } else if (lastName != null) {
+                    return Optional.of(lastName);
+                }
             }
         }
         return Optional.empty();
